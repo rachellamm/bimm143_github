@@ -1,0 +1,85 @@
+---
+title: "Class 6 Function Homework"
+author: "Rachel Lamm"
+format: pdf
+toc: true 
+---
+
+Write a function from the supplied code
+
+```{r}
+# Can you improve this analysis code?
+library(bio3d)
+s1 <- read.pdb("4AKE") # kinase with drug
+s2 <- read.pdb("1AKE") # kinase no drug
+s3 <- read.pdb("1E4Y") # kinase with drug
+
+s1.chainA <- trim.pdb(s1, chain="A", elety="CA")
+s2.chainA <- trim.pdb(s2, chain="A", elety="CA")
+s3.chainA <- trim.pdb(s1, chain="A", elety="CA")
+
+s1.b <- s1.chainA$atom$b
+s2.b <- s2.chainA$atom$b
+s3.b <- s3.chainA$atom$b
+
+plotb3(s1.b, sse=s1.chainA, typ="l", ylab="Bfactor")
+plotb3(s2.b, sse=s2.chainA, typ="l", ylab="Bfactor")
+plotb3(s3.b, sse=s3.chainA, typ="l", ylab="Bfactor")
+```
+
+> Q6. How would you generalize the original code above to work with any set of input protein structures?
+
+
+## Code
+
+```{r}
+plot_protein_bfactors <- function(pdb_id, chain="A") {
+  pdb<- read.pdb(pdb_id)
+  pdb_chain<- trim.pdb (pdb, chain = chain, elety= "CA")
+  b_factors <- pdb_chain$atom$b
+  
+  plotb3(b_factors, sse = pdb_chain, typ="l" , ylab= "B-factor", main=paste ("Protein B-Factors for PDB", pdb_id)
+  ) 
+  return(b_factors)
+}
+```
+
+```{r}
+plot_protein_bfactors ("4AKE")
+```
+
+```{r}
+plot_protein_bfactors ("1AKE")
+```
+
+```{r}
+plot_protein_bfactors ("1E4Y")
+```
+
+## Documentation 
+
+**Inputs**
+
+First I started with the function `plot_protein_bfactors()` which needs two different pieces of information. The first piece is `pdb_id` which is the ID we need of the protein that we want to look at from the PDB (Protein Data Bank) like 4AKE, 1AKE, and 1E4Y. The second piece is the `chain` input which basically tells the function which chain of that specific protein to look at.
+
+**What the function does and how to use it**
+
+The function `plot_protein_bfactors()` is what reads a protein structure from the PDB. It will select only the alpha carbon atoms from the specific chain you choose. It then takes out the B-factors which tells you how flexible parts of the protein are. The line plot it produces shows the B-factors along the protein sequence. In order to use this function, you type the function name `plot_protein_bfactors ("4AKE")` and as well add the PBD ID with it. 
+
+
+**Output**
+
+The function `plot_protein_bfactors()` will give you two different things. It will make a line plot that shows the B-factors for each residue of the specific protein chain you chose. The plot helps you to recognize which parts of the protein are going to be more flexible or inflexible. The second output it'll give is a list of numbers called *B-factors* and there is one for each residue in the protein. 
+
+
+
+
+
+
+
+
+
+
+
+
+
