@@ -1,0 +1,205 @@
+---
+title: "Class 11: AlphaFold"
+author: "Rachel Lamm (A18518313)"
+format: pdf
+toc: true
+---
+
+## Background
+
+We saw last day that the main respitory for biomolecular structure (the PDB database) only has ~250,000 entries 
+
+UniProtKB (the main protein sequence database) has over 200 million entries!
+
+
+## Alphafold 
+
+In this hands-on session we will utilize AlphaFold to predict protein structure from sequence (Jumper et al. 2021).
+
+Without the aid of such approaches, it can take years of expensive laboratory work to determine the structure of just one protein. With AlphaFold we can now accurately compute a typical protein structure in as little as ten minutes.
+
+
+
+
+## The EBI AlphaFold databse
+
+The EBI alphafold database contains lots of computed structure models increasingly likely that the structure you are interested in is already in this database at < https://alphafold.ebi.ac.uk
+
+There are 3 major outputs from AlphaFold
+
+1. A model of structure in **PDB** format
+2. a **pLDDT score**: that tells us how confident the model is for a given residue in your protein (High values are good, above 70)
+3. a **PAE score** that tells us about protein packing quality 
+
+If you can't find a matching entry for the sequence you are interested in AFDB you can run AlphaFold yourself...
+
+
+## Running AlphaFold
+
+We will use ColabFold to run AlphaFold on our sequence
+
+Figure from AlphaFold here!
+
+## Interpreting results
+
+Custom analysis of resulting models
+
+We can read all the AlphaFold results into R and do more quantitative analysis than just viewing the structures in Mol-star:
+
+Read all the PDB MODELS:
+
+```{r}
+class11_dir <- "hipvrdimer_94b5b/"
+```
+
+```{r}
+pdb_files <- list.files(path=class11_dir,
+                        pattern="*.pdb",
+                        full.names = TRUE)
+
+basename(pdb_files)
+```
+
+```{r}
+library(bio3d)
+
+# Read all data from Models 
+#  and superpose/fit coords
+pdbs <- pdbaln(pdb_files, fit=TRUE, exefile="msa")
+```
+```{r}
+pdbs
+```
+```{r}
+rd <- rmsd(pdbs, fit=T)
+```
+
+```{r}
+range(rd)
+```
+
+```{r}
+library(pheatmap)
+
+colnames(rd) <- paste0("m",1:5)
+rownames(rd) <- paste0("m",1:5)
+pheatmap(rd)
+```
+
+```{r}
+pdb <- read.pdb("1hsg")
+```
+
+```{r}
+plotb3(pdbs$b[1,], typ="l", lwd=2, sse=pdb)
+points(pdbs$b[2,], typ="l", col="red")
+points(pdbs$b[3,], typ="l", col="blue")
+points(pdbs$b[4,], typ="l", col="darkgreen")
+points(pdbs$b[5,], typ="l", col="orange")
+abline(v=100, col="gray")
+```
+
+```{r}
+core <- core.find(pdbs)
+core.inds <- print(core, vol=0.5)
+```
+
+```{r}
+xyz <- pdbfit(pdbs, core.inds, outpath="corefit_structures")
+```
+
+```{r}
+rf <- rmsf(xyz)
+
+plotb3(rf, sse=pdb)
+abline(v=100, col="gray", ylab="RMSF")
+```
+
+
+## Predicted Alignment Error for domains
+
+
+```{r}
+library(jsonlite)
+
+# Listing of all PAE JSON files
+pae_files <- list.files(path=class11_dir,
+                        pattern=".*model.*\\.json",
+                        full.names = TRUE)
+```
+
+```{r}
+pae1 <- read_json(pae_files[1],simplifyVector = TRUE)
+pae5 <- read_json(pae_files[5],simplifyVector = TRUE)
+
+attributes(pae1)
+```
+```{r}
+head(pae1$plddt) 
+```
+
+```{r}
+pae1$max_pae
+pae5$max_pae
+```
+
+```{r}
+plot.dmat(pae1$pae, 
+          xlab="Residue Position (i)",
+          ylab="Residue Position (j)")
+```
+```{r}
+plot.dmat(pae5$pae, 
+          xlab="Residue Position (i)",
+          ylab="Residue Position (j)",
+          grid.col = "black",
+          zlim=c(0,30))
+```
+
+```{r}
+plot.dmat(pae1$pae, 
+          xlab="Residue Position (i)",
+          ylab="Residue Position (j)",
+          grid.col = "black",
+          zlim=c(0,30))
+```
+
+## Residue conservation from alignment file
+
+```{r}
+aln_file <- list.files(path=class11_dir,
+                       pattern=".a3m$",
+                        full.names = TRUE)
+aln_file
+```
+
+```{r}
+aln <- read.fasta(aln_file[1], to.upper = TRUE)
+```
+
+How many sequences are in this alignment
+
+```{r}
+dim(aln$ali)
+```
+
+```{r}
+sim <- conserv(aln)
+```
+
+```{r}
+plotb3(sim[1:99], sse=trim.pdb(pdb, chain="A"),
+       ylab="Conservation Score")
+```
+
+```{r}
+con <- consensus(aln, cutoff = 0.9)
+con$seq
+```
+
+
+
+
+
+
+
