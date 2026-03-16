@@ -27,6 +27,8 @@ My classwork from [BIMM143](https://bioboot.github.io/bimm143_W26/) at UC San Di
 
 - Class 14 [RNASeq Mini-Project](lab14.qmd)
 
+- Class 17 [Class 17 Lab](class17lab.pdf)
+
 - Class 18 [Mini Project](class18lab.qmd)
 
 
